@@ -10,13 +10,15 @@ class CreateProductComponent extends Component {
             id: this.props.match.params.id,
             name: '',
             price: '',
-            description: ''
+            description: '',
+            errors: {name: '', price: ''}
         }
+        
         this.changeNameHandler = this.changeNameHandler.bind(this);
         this.changePriceHandler = this.changePriceHandler.bind(this);
         this.saveOrUpdateProduct = this.saveOrUpdateProduct.bind(this);
     }
-
+    
     // step 3
     componentDidMount(){
 
@@ -42,10 +44,14 @@ class CreateProductComponent extends Component {
         if(this.state.id === '_add'){
             ProductService.createProduct(product).then(res =>{
                 this.props.history.push('/products');
+            }).catch(error => {
+                this.setBadRequest(error);
             });
         }else{
             ProductService.updateProduct(product, this.state.id).then( res => {
                 this.props.history.push('/products');
+            }).catch(error => {
+                this.setBadRequest(error);
             });
         }
     }
@@ -73,6 +79,40 @@ class CreateProductComponent extends Component {
             return <h3 className="text-center">Update Product</h3>
         }
     }
+
+    setBadRequest(error) {
+        if (typeof error.response.data.name === 'undefined') {
+            this.setState({
+                name: this.state.name, 
+                price: this.state.price, 
+                description: this.state.description,
+                errors: {name: '', price: error.response.data.price}
+            });
+        } else if (typeof error.response.data.price === 'undefined') {
+            this.setState({
+                name: this.state.name, 
+                price: this.state.price, 
+                description: this.state.description,
+                errors: {name: error.response.data.name, price: ''}
+            });
+        } else {
+            this.setState({
+                name: this.state.name, 
+                price: this.state.price, 
+                description: this.state.description,
+                errors: {name: error.response.data.name, price: error.response.data.price}
+            });
+        }
+        setTimeout(() => {
+            this.setState({
+                name: this.state.name, 
+                price: this.state.price, 
+                description: this.state.description,
+                errors: {name: '', price: ''}
+            });
+        }, 3000);
+    }
+
     render() {
         return (
             <div>
@@ -89,11 +129,13 @@ class CreateProductComponent extends Component {
                                             <label> Product: </label>
                                             <input placeholder="Product" name="name" className="form-control" 
                                                 value={this.state.name} onChange={this.changeNameHandler}/>
+                                                {this.state.errors.name && <p style={{ color: 'red' }}>{this.state.errors.name}</p>}
                                         </div>
                                         <div className = "form-group">
                                             <label> Price: </label>
                                             <input placeholder="Price" name="price" className="form-control" 
                                                 value={this.state.price} onChange={this.changePriceHandler}/>
+                                                {this.state.errors.price && <p style={{ color: 'red' }}>{this.state.errors.price}</p>}
                                         </div>
                                         <div className = "form-group">
                                             <label> Description: </label>
